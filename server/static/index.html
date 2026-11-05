@@ -96,6 +96,14 @@
             </span>
             <span class="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800">OSINT</span>
           </button>
+
+          <button onclick="showTab('maps')" id="nav-maps" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all">
+            <span class="flex items-center gap-2.5">
+              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+              Google Maps Scraper
+            </span>
+            <span class="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-blue-100 text-blue-800">Places</span>
+          </button>
         </nav>
       </div>
 
@@ -462,12 +470,74 @@ Managing Director</textarea>
           </div>
         </section>
 
+        <!-- TAB 8: Google Maps & Local Business Contact Scraper -->
+        <section id="tab-maps" class="hidden space-y-6 max-w-5xl mx-auto">
+          <div class="bg-white border border-slate-200 rounded-lg p-6 space-y-5 shadow-sm">
+            <div>
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-700">Google Maps & Local Directory Contact Scraper</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Scrape verified local businesses, phone numbers, websites, and decision-maker roles by city and category.</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Target Category / Niche *</label>
+                <input id="maps-category" type="text" value="Logistics and Freight Forwarding" placeholder="e.g. Fleet Managers, Car Dealerships, Logistics" class="w-full text-xs border border-slate-200 rounded px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Target City / State *</label>
+                <input id="maps-city" type="text" value="Abuja, Nigeria" placeholder="e.g. Abuja, Lagos, London" class="w-full text-xs border border-slate-200 rounded px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Max Leads to Scrape</label>
+                <select id="maps-limit" class="w-full text-xs border border-slate-200 rounded px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
+                  <option value="5">5 Contacts (Quick test)</option>
+                  <option value="15" selected>15 Contacts (Standard)</option>
+                  <option value="30">30 Contacts</option>
+                  <option value="50">50 Contacts</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2">
+              <span id="maps-status" class="text-xs text-slate-400">Extracts phone, addresses, domains, and decision-maker roles.</span>
+              <button onclick="runMapsScraper()" id="btn-run-maps" class="px-4 py-2 text-xs font-medium rounded-md bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-sm flex items-center gap-2">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
+                Scrape Business Contacts
+              </button>
+            </div>
+
+            <!-- Scraped Maps Table -->
+            <div id="maps-results-container" class="hidden pt-4 border-t border-slate-100 space-y-3">
+              <div class="flex items-center justify-between">
+                <span id="maps-results-count" class="text-xs font-semibold text-slate-700">Scraped Places</span>
+                <button onclick="exportMapsCSV()" class="px-3 py-1 text-xs border border-slate-200 rounded hover:bg-slate-50 text-slate-700">Export as CSV</button>
+              </div>
+
+              <div class="overflow-x-auto border border-slate-200 rounded-lg">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 font-medium">
+                    <tr>
+                      <th class="px-4 py-2.5">Company / Business</th>
+                      <th class="px-4 py-2.5">Phone Number</th>
+                      <th class="px-4 py-2.5">Website</th>
+                      <th class="px-4 py-2.5">Address</th>
+                      <th class="px-4 py-2.5">Target Contact</th>
+                    </tr>
+                  </thead>
+                  <tbody id="maps-results-tbody" class="divide-y divide-slate-100 bg-white">
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </div>
     </main>
   </div>
 
   <script>
-    const tabs = ['targeting', 'persona', 'models', 'inboxes', 'outbox', 'leads', 'investigator'];
+    const tabs = ['targeting', 'persona', 'models', 'inboxes', 'outbox', 'leads', 'investigator', 'maps'];
     const tabHeaders = {
       targeting: ["Locations & Targeting Criteria", "Define geographic markets, target industries, and executive roles."],
       persona: ["Sender Identity & Offer", "Configure company voice, value proposition, and meeting goals."],
@@ -475,7 +545,8 @@ Managing Director</textarea>
       inboxes: ["Email Inboxes & Warmup", "Configure SMTP credentials, throttle limits, and bounce kill-switches."],
       outbox: ["Smart Outbox", "Review, edit, or approve drafted outreach before it leaves the server."],
       leads: ["Pipeline Leads", "Full directory of discovered and enriched decision-makers."],
-      investigator: ["Person Investigator (OSINT)", "Investigate individuals across web, LinkedIn, Twitter/X, and public sources."]
+      investigator: ["Person Investigator (OSINT)", "Investigate individuals across web, LinkedIn, Twitter/X, and public sources."],
+      maps: ["Google Maps & Local Contact Scraper", "Scrape business phone numbers, addresses, and domains by city."]
     };
 
     function showTab(activeTab) {
@@ -654,6 +725,90 @@ Managing Director</textarea>
         btn.innerHTML = originalText;
         btn.disabled = false;
       }
+    }
+
+    let lastScrapedPlaces = [];
+
+    async function runMapsScraper() {
+      const category = document.getElementById('maps-category').value.trim();
+      const city = document.getElementById('maps-city').value.trim();
+      const limit = parseInt(document.getElementById('maps-limit').value);
+
+      if (!category || !city) {
+        alert("Please specify both a category and a target city.");
+        return;
+      }
+
+      const btn = document.getElementById('btn-run-maps');
+      const orig = btn.innerHTML;
+      btn.innerHTML = `<span>Scraping Google Maps Contacts...</span>`;
+      btn.disabled = true;
+
+      const container = document.getElementById('maps-results-container');
+      const tbody = document.getElementById('maps-results-tbody');
+      const countEl = document.getElementById('maps-results-count');
+
+      tbody.innerHTML = '';
+      container.classList.add('hidden');
+
+      try {
+        const res = await fetch('/api/maps/scrape', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ category: category, city: city, limit: limit })
+        });
+        const data = await res.json();
+        const results = data.results || [];
+        lastScrapedPlaces = results;
+
+        countEl.innerText = `Scraped ${results.length} Verified Businesses in ${city}`;
+
+        if (results.length > 0) {
+          results.forEach(p => {
+            const phone = p.phone ? `<a href="tel:${p.phone}" class="text-blue-600 font-mono hover:underline">${p.phone}</a>` : `<span class="text-slate-400">N/A</span>`;
+            const web = p.website ? `<a href="${p.website}" target="_blank" class="text-slate-700 hover:text-slate-900 underline font-mono text-[11px] truncate max-w-[140px] block">${p.website.replace('https://','').replace('http://','')}</a>` : `<span class="text-slate-400">N/A</span>`;
+
+            tbody.innerHTML += `
+              <tr class="hover:bg-slate-50/70 transition-colors">
+                <td class="px-4 py-2.5 font-medium text-slate-900">
+                  ${p.name}
+                  <span class="block text-[10px] text-slate-400 font-normal">${p.category || category}</span>
+                </td>
+                <td class="px-4 py-2.5">${phone}</td>
+                <td class="px-4 py-2.5">${web}</td>
+                <td class="px-4 py-2.5 text-slate-500">${p.address || city}</td>
+                <td class="px-4 py-2.5 text-slate-700 font-medium">${p.decision_maker_title || 'General Manager'}</td>
+              </tr>
+            `;
+          });
+        } else {
+          tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-4 text-center text-slate-400">No matching business listings found. Try broadening the category name.</td></tr>`;
+        }
+
+        container.classList.remove('hidden');
+      } catch (e) {
+        alert("Error scraping contacts: " + e);
+      } finally {
+        btn.innerHTML = orig;
+        btn.disabled = false;
+      }
+    }
+
+    function exportMapsCSV() {
+      if (!lastScrapedPlaces || lastScrapedPlaces.length === 0) {
+        alert("No scraped places to export.");
+        return;
+      }
+      let csv = "Company Name,Phone,Website,Address,Category,Target Contact\n";
+      lastScrapedPlaces.forEach(p => {
+        csv += `"${(p.name || '').replace(/"/g, '""')}","${p.phone || ''}","${p.website || ''}","${(p.address || '').replace(/"/g, '""')}","${p.category || ''}","${p.decision_maker_title || ''}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('href', url);
+      a.setAttribute('download', `google_maps_leads_${Date.now()}.csv`);
+      a.click();
     }
   </script>
 </body>

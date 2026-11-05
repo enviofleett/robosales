@@ -22,9 +22,11 @@ load_dotenv(".env")
 
 from server.supabase_db import db
 from skills.person_investigator import PersonInvestigator
+from skills.maps_scraper import GoogleMapsScraper
 
 STATIC_INDEX = Path(__file__).resolve().parent / "static" / "index.html"
 investigator = PersonInvestigator()
+maps_scraper = GoogleMapsScraper()
 
 app = FastAPI(
     title="Harvey Sales Automation SaaS API",
@@ -260,6 +262,31 @@ import subprocess
 
 # Background task state
 _running_processes: Dict[str, subprocess.Popen] = {}
+
+
+class MapsScrapeRequest(BaseModel):
+    category: str
+    city: str
+    limit: int = 15
+
+
+@app.post("/api/maps/scrape")
+async def scrape_google_maps(data: MapsScrapeRequest):
+    """Scrape and return local business listings with contact numbers and addresses."""
+    try:
+        results = await maps_scraper.scrape_places(
+            category=data.category,
+            city=data.city,
+            limit=data.limit,
+        )
+        return {
+            "category": data.category,
+            "city": data.city,
+            "count": len(results),
+            "results": results,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/projects/{project_slug}/discover")
