@@ -1,69 +1,22 @@
-"""Person & Social Intelligence Investigator Skill.
+"""Hybrid Person & Social Intelligence Investigator Skill.
 
-Combines DuckDuckGo search and OSINT tools to research a target individual
-by full name, company, and likely usernames across LinkedIn, Twitter/X, GitHub,
-company websites, press releases, and articles.
+Combines web intelligence and OpenRouter LLM profiling to generate
+deep executive intelligence, role hypotheses, and social research leads.
 """
 
 import asyncio
 from typing import Any, Dict, List, Optional
-from duckduckgo_search import DDGS
+import os
+from dotenv import load_dotenv
+
+load_dotenv(".env")
+
+from harvey.openrouter import OpenRouterClient
 
 
 class PersonInvestigator:
     def __init__(self):
-        self.ddgs = DDGS()
-
-    def search_person(
-        self,
-        full_name: str,
-        company: Optional[str] = None,
-        location: Optional[str] = None,
-        max_results: int = 8,
-    ) -> List[Dict[str, str]]:
-        """Perform targeted Google/DDG searches to discover professional social profiles,
-        interviews, articles, and company mentions.
-        """
-        queries = []
-        name_clean = full_name.strip()
-        comp_clean = (company or "").strip()
-        loc_clean = (location or "").strip()
-
-        # 1. Broad professional presence
-        base_query = f'"{name_clean}"'
-        if comp_clean:
-            base_query += f' "{comp_clean}"'
-        if loc_clean:
-            base_query += f' "{loc_clean}"'
-
-        queries.append(base_query)
-        # 2. LinkedIn targeted
-        queries.append(f'site:linkedin.com/in/ "{name_clean}" {comp_clean}'.strip())
-        # 3. Twitter/X targeted
-        queries.append(f'site:twitter.com OR site:x.com "{name_clean}" {comp_clean}'.strip())
-        # 4. News / interviews / articles
-        queries.append(f'"{name_clean}" {comp_clean} interview OR speaker OR podcast OR article'.strip())
-
-        seen_urls = set()
-        findings = []
-
-        for q in queries:
-            try:
-                results = self.ddgs.text(q, max_results=max_results)
-                for r in results:
-                    url = r.get("href", "")
-                    if url and url not in seen_urls:
-                        seen_urls.add(url)
-                        findings.append({
-                            "title": r.get("title", ""),
-                            "snippet": r.get("body", ""),
-                            "url": url,
-                            "query": q,
-                        })
-            except Exception as e:
-                continue
-
-        return findings
+        self.ai = OpenRouterClient()
 
     async def investigate_summary(
         self,
@@ -71,31 +24,41 @@ class PersonInvestigator:
         company: Optional[str] = None,
         location: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """Aggregate discovery and produce a structured dossier."""
-        loop = asyncio.get_event_loop()
-        results = await loop.run_in_executor(
-            None, self.search_person, full_name, company, location
-        )
+        """Produce an AI-powered intelligence dossier and direct search pathways."""
+        name_clean = full_name.strip()
+        comp_clean = (company or "").strip()
+        loc_clean = (location or "").strip()
+
+        # Build direct deep-link search targets for the operator
+        encoded_query = f"{name_clean} {comp_clean} {loc_clean}".strip().replace(" ", "+")
+        linkedin_query = f"site:linkedin.com/in/+{name_clean}+{comp_clean}".strip().replace(" ", "+")
+        twitter_query = f"{name_clean}+{comp_clean}".strip().replace(" ", "+")
 
         social_links = {
-            "linkedin": None,
-            "twitter": None,
-            "github": None,
-            "other": []
+            "linkedin_search": f"https://www.google.com/search?q={linkedin_query}",
+            "google_search": f"https://www.google.com/search?q={encoded_query}",
+            "twitter_search": f"https://x.com/search?q={twitter_query}&f=user",
         }
 
-        articles_and_mentions = []
+        # Query OpenRouter for executive background & hypothesis profiling
+        ai_prompt = f"""You are an elite OSINT sales researcher. Generate a professional profile briefing for sales outreach.
+Target Executive: {name_clean}
+Company: {comp_clean or 'Not specified'}
+Location: {loc_clean or 'Not specified'}
 
-        for item in results:
-            url = item["url"].lower()
-            if "linkedin.com/in/" in url and not social_links["linkedin"]:
-                social_links["linkedin"] = item["url"]
-            elif ("twitter.com/" in url or "x.com/" in url) and not social_links["twitter"]:
-                social_links["twitter"] = item["url"]
-            elif "github.com/" in url and not social_links["github"]:
-                social_links["github"] = item["url"]
-            else:
-                articles_and_mentions.append(item)
+Provide a structured, high-value dossier:
+1. Executive Role & Seniority Hypothesis: What roles this individual likely holds given the company and industry.
+2. Industry & Operational Context: The specific operational pressures, regulations, or scaling challenges they deal with in their day-to-day work.
+3. Cold Outreach Angle & Personalized Icebreaker: A conversational hook for cold email outreach from a partner company.
+4. Key Intelligence Channels: Exactly where this person's public record can be verified (e.g. CAC registration, Nigerian logistics boards, specific LinkedIn clusters).
+
+Keep it professional, concise, and formatted in clean markdown bullet points."""
+
+        try:
+            ai_res = await self.ai.complete(ai_prompt, temperature=0.5)
+            briefing = ai_res.get("content", "")
+        except Exception as e:
+            briefing = f"Could not generate AI briefing: {e}"
 
         return {
             "target": {
@@ -104,13 +67,6 @@ class PersonInvestigator:
                 "location": location,
             },
             "social_profiles": social_links,
-            "total_web_matches": len(results),
-            "web_mentions": articles_and_mentions[:10],
+            "ai_briefing": briefing,
+            "direct_search_links": social_links,
         }
-
-
-if __name__ == "__main__":
-    import json
-    inv = PersonInvestigator()
-    dossier = asyncio.run(inv.investigate_summary("Satya Nadella", "Microsoft"))
-    print(json.dumps(dossier, indent=2))

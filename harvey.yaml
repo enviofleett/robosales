@@ -32,11 +32,8 @@ product:
     meeting_owner: Chude
 icp:
   industries:
-  - Mobility & Logistics
-  - Fleet Operations
-  - Fintech
-  - Supply Chain & Delivery
-  - Transportation Tech
+  - Schools
+  - Private sector
   company_size: 10-500 employees
   titles:
   - Head of Logistics
