@@ -138,7 +138,11 @@ def main():
 
     run_parser = subparsers.add_parser("run", help="Run Harvey heartbeat/agent for a project")
     run_parser.add_argument("--project", "-p", required=False, help="Name of project (optional)")
-    run_parser.add_argument("--once", action="store_true", help="Run single turn/heartbeat")
+
+    discover_parser = subparsers.add_parser("discover", help="Discover companies matching ICP")
+    discover_parser.add_argument("--project", "-p", required=False, help="Name of project (optional)")
+    discover_parser.add_argument("--city", "-c", required=False, help="Specific city override")
+    discover_parser.add_argument("--limit", "-l", type=int, default=10, help="Max companies to discover")
 
     args = parser.parse_args()
 
@@ -158,8 +162,14 @@ def main():
             switch_project(args.project)
         venv_python = BASE_DIR / ".venv" / "bin" / "python3"
         cmd = [str(venv_python), "-m", "harvey", "run"]
-        if args.once:
-            cmd.append("--once")
+        subprocess.run(cmd)
+    elif args.action == "discover":
+        if args.project:
+            switch_project(args.project)
+        venv_python = BASE_DIR / ".venv" / "bin" / "python3"
+        cmd = [str(venv_python), "-m", "harvey", "discover", "--limit", str(args.limit)]
+        if args.city:
+            cmd.extend(["--city", args.city])
         subprocess.run(cmd)
 
 

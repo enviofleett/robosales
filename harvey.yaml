@@ -34,7 +34,7 @@ icp:
   industries:
   - Mobility & Logistics
   - Fleet Operations
-  - Government parastals and agency
+  - Fintech
   - Supply Chain & Delivery
   - Transportation Tech
   company_size: 10-500 employees
@@ -45,8 +45,7 @@ icp:
   - Founder & CEO
   - Managing Director
   geography:
-  - Nigeria
-  - Abuja
+  - Abuja Nigeria
   hiring_signals: []
 brain:
   provider: openrouter

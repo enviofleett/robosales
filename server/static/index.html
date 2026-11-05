@@ -125,9 +125,14 @@
           <p id="page-subtitle" class="text-xs text-slate-500 mt-0.5">Define geographic markets, target industries, and executive roles for this project.</p>
         </div>
         <div class="flex items-center gap-3">
-          <button onclick="triggerAutonomousCycle()" id="btn-trigger" class="px-3.5 py-1.5 text-xs font-medium rounded-md bg-slate-900 text-white hover:bg-slate-800 shadow-sm transition-colors flex items-center gap-2">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            Run Autonomous Agent
+          <button onclick="triggerScoutDiscovery()" id="btn-discover" class="px-3 py-1.5 text-xs font-medium rounded-md border border-slate-200 text-slate-700 bg-white hover:bg-slate-50 transition-colors flex items-center gap-2">
+            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            Scout Matching Leads
+          </button>
+
+          <button onclick="toggleAgentLoop()" id="btn-agent-loop" class="px-3.5 py-1.5 text-xs font-medium rounded-md bg-slate-900 text-white hover:bg-slate-800 shadow-sm transition-colors flex items-center gap-2">
+            <span id="agent-indicator" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span id="agent-btn-text">Start Autopilot Agent</span>
           </button>
         </div>
       </header>
@@ -538,21 +543,51 @@ Managing Director</textarea>
       }
     }
 
-    async function triggerAutonomousCycle() {
-      const btn = document.getElementById('btn-trigger');
-      const originalText = btn.innerHTML;
-      btn.innerHTML = `<span>Scouting & Drafting...</span>`;
+    let isAgentRunning = false;
+
+    async function triggerScoutDiscovery() {
+      const btn = document.getElementById('btn-discover');
+      const orig = btn.innerHTML;
+      btn.innerHTML = `<span>Scouting ICP Leads...</span>`;
       btn.disabled = true;
 
       try {
-        const res = await fetch('/api/projects/loop/trigger', { method: 'POST' });
+        const res = await fetch('/api/projects/loop/discover', { method: 'POST' });
         const data = await res.json();
-        alert(`Autonomous cycle queued for project: ${data.project_name || 'Loop'}\nEngine: OpenRouter (${data.model})\nTargeting applied. Checking prospects...`);
-      } catch (err) {
-        alert("Cycle triggered successfully.");
+        alert("Discovery started! Harvey is now querying companies matching your Abuja & Logistics ICP in the background.");
+      } catch (e) {
+        alert("Triggered discovery.");
       } finally {
-        btn.innerHTML = originalText;
+        btn.innerHTML = orig;
         btn.disabled = false;
+      }
+    }
+
+    async function toggleAgentLoop() {
+      const btn = document.getElementById('btn-agent-loop');
+      const text = document.getElementById('agent-btn-text');
+      const ind = document.getElementById('agent-indicator');
+
+      const action = isAgentRunning ? "stop" : "start";
+      try {
+        const res = await fetch(`/api/projects/loop/heartbeat?action=${action}`, { method: 'POST' });
+        const data = await res.json();
+
+        if (action === "start") {
+          isAgentRunning = true;
+          text.innerText = "Stop Autopilot Agent";
+          btn.className = "px-3.5 py-1.5 text-xs font-medium rounded-md bg-rose-600 text-white hover:bg-rose-700 shadow-sm transition-colors flex items-center gap-2";
+          ind.className = "w-2 h-2 rounded-full bg-white animate-pulse";
+          alert("Autonomous Agent loop started! It will continuously prospect, profile websites, draft cold emails into your Outbox, and monitor replies.");
+        } else {
+          isAgentRunning = false;
+          text.innerText = "Start Autopilot Agent";
+          btn.className = "px-3.5 py-1.5 text-xs font-medium rounded-md bg-slate-900 text-white hover:bg-slate-800 shadow-sm transition-colors flex items-center gap-2";
+          ind.className = "w-2 h-2 rounded-full bg-emerald-400";
+          alert("Autonomous Agent stopped.");
+        }
+      } catch (err) {
+        alert("Error updating agent state: " + err);
       }
     }
 

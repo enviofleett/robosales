@@ -255,6 +255,85 @@ async def investigate_person(data: InvestigateRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+import asyncio
+import subprocess
+
+# Background task state
+_running_processes: Dict[str, subprocess.Popen] = {}
+
+
+@app.post("/api/projects/{project_slug}/discover")
+async def trigger_discover(project_slug: str, limit: int = 10):
+    """Trigger company discovery matching ICP directly from the web dashboard."""
+    base_dir = Path(__file__).resolve().parent.parent
+    venv_python = base_dir / ".venv" / "bin" / "python3"
+    
+    # Run discovery in background
+    cmd = [str(venv_python), "-m", "harvey", "discover", "--limit", str(limit)]
+    try:
+        proc = subprocess.Popen(
+            cmd,
+            cwd=str(base_dir),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        return {
+            "status": "running",
+            "message": f"Discovery started for {project_slug} (Limit: {limit} companies)",
+            "pid": proc.pid
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/projects/{project_slug}/heartbeat")
+async def toggle_heartbeat(project_slug: str, action: str = "start"):
+    """Start or stop the continuous autonomous background agent."""
+    global _running_processes
+    base_dir = Path(__file__).resolve().parent.parent
+    venv_python = base_dir / ".venv" / "bin" / "python3"
+
+    if action == "stop":
+        proc = _running_processes.get(project_slug)
+        if proc and proc.poll() is None:
+            proc.terminate()
+            del _running_processes[project_slug]
+            return {"status": "stopped", "message": f"Agent stopped for {project_slug}"}
+        return {"status": "idle", "message": "Agent was not running"}
+
+    # Start continuous loop
+    if project_slug in _running_processes and _running_processes[project_slug].poll() is None:
+        return {"status": "already_running", "pid": _running_processes[project_slug].pid}
+
+    cmd = [str(venv_python), "-m", "harvey", "run"]
+    proc = subprocess.Popen(
+        cmd,
+        cwd=str(base_dir),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+    _running_processes[project_slug] = proc
+    return {
+        "status": "active",
+        "message": f"Autonomous agent active for {project_slug}",
+        "pid": proc.pid
+    }
+
+
+@app.get("/api/projects/{project_slug}/agent-status")
+async def get_agent_status(project_slug: str):
+    """Check if the autonomous agent is currently running."""
+    proc = _running_processes.get(project_slug)
+    is_running = proc is not None and proc.poll() is None
+    return {
+        "project": project_slug,
+        "is_running": is_running,
+        "pid": proc.pid if is_running else None
+    }
+
+
 @app.post("/api/projects/{project_slug}/trigger")
 async def trigger_run(project_slug: str, dry_run: bool = False):
     """Trigger Harvey outbound agent turn for this project."""
