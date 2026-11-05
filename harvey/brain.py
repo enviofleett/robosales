@@ -39,7 +39,7 @@ _NON_RETRYABLE_PATTERNS = (
 )
 
 
-PROVIDER_LABELS = {"claude": "Claude", "codex": "Codex"}
+PROVIDER_LABELS = {"claude": "Claude", "codex": "Codex", "openrouter": "OpenRouter"}
 
 # Settings key holding the brain's last health transition, for `harvey
 # status` and the dashboard: {"provider", "status": "ok"|"paused", "reason",
@@ -101,6 +101,10 @@ class Brain:
                 model=self.model, reasoning_effort=self.config.reasoning_effort
             )
             self.quota = CodexQuotaClient(self.codex)
+        elif self.provider == "openrouter":
+            from harvey.openrouter import OpenRouterClient, OpenRouterQuotaClient
+            self.openrouter = OpenRouterClient(model=self.model)
+            self.quota = OpenRouterQuotaClient(self.openrouter)
         else:
             # Lazy import avoids a cycle (quota -> usage -> state).
             from harvey.integrations.quota import QuotaClient
@@ -133,6 +137,16 @@ class Brain:
         PROVIDER_RECHECK_SECONDS, so a persistent problem doesn't start
         runtimes every heartbeat.
         """
+        if self.provider == "openrouter":
+            from harvey.openrouter import OpenRouterError
+            try:
+                await self.openrouter.preflight()
+                return ""
+            except OpenRouterError as e:
+                return str(e)
+            except Exception as e:
+                return f"OpenRouter preflight check failed: {e}"
+
         if self.provider != "codex":
             return ""
         from harvey.codex import CodexError
@@ -237,6 +251,12 @@ class Brain:
         ``agent``/``task`` label the call in the usage_events ledger so the
         dashboard can attribute tokens and cost to specific work.
         """
+        if self.provider == "openrouter":
+            return await self._think_openrouter(
+                prompt, session_id=session_id, timeout=timeout,
+                max_retries=max_retries, agent=agent, task=task,
+            )
+
         if self.provider == "codex":
             return await self._think_codex(
                 prompt, session_id=session_id, timeout=timeout,
@@ -437,6 +457,62 @@ class Brain:
 
         logger.error(
             f"Codex call failed after {max_retries + 1} attempts. "
+            f"Last error: {last_error[:200]}"
+        )
+        return ""
+
+    async def _think_openrouter(
+        self,
+        prompt: str,
+        session_id: str | None = None,
+        timeout: float = DEFAULT_TIMEOUT_SECONDS,
+        max_retries: int = DEFAULT_MAX_RETRIES,
+        agent: str = "",
+        task: str = "",
+    ) -> str:
+        """Call OpenRouter API with retries and usage recording."""
+        from harvey.openrouter import OpenRouterError
+
+        last_error = ""
+        for attempt in range(max_retries + 1):
+            if attempt > 0:
+                delay = RETRY_BASE_DELAY * (2 ** (attempt - 1))
+                logger.info(
+                    f"Retrying OpenRouter call in {delay:.0f}s "
+                    f"(attempt {attempt + 1}/{max_retries + 1})..."
+                )
+                await asyncio.sleep(delay)
+
+            start = time.monotonic()
+            try:
+                res = await self.openrouter.complete(prompt, timeout=timeout)
+                duration_ms = int((time.monotonic() - start) * 1000)
+
+                # Record usage event
+                usage = res.get("usage", {})
+                await self.state.record_usage_event(
+                    agent=agent or (session_id.split("-")[1] if session_id and "-" in session_id else ""),
+                    task=task or session_id or "",
+                    session_id=session_id or "",
+                    model=res.get("model", self.model),
+                    duration_ms=duration_ms,
+                    num_turns=1,
+                    source="openrouter_api",
+                    provider="openrouter",
+                    input_tokens=usage.get("prompt_tokens", 0),
+                    output_tokens=usage.get("completion_tokens", 0),
+                )
+                return res.get("content", "")
+            except OpenRouterError as e:
+                last_error = str(e)
+                if e.kind in ("unauthorized", "auth_missing"):
+                    logger.error(f"Non-retryable OpenRouter auth error: {e}")
+                    return ""
+            except Exception as e:
+                last_error = f"{type(e).__name__}: {e}"
+
+        logger.error(
+            f"OpenRouter call failed after {max_retries + 1} attempts. "
             f"Last error: {last_error[:200]}"
         )
         return ""

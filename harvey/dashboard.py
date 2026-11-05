@@ -191,11 +191,24 @@ async def get_setup_status():
             config_valid = company not in ("Your Company", "") and product not in ("Your Product", "")
         except Exception:
             pass
+    # 6. Brain / LLM provider configured
+    brain_cfg = cfg.get("brain", {}) if config_path.exists() and config_valid else {}
+    brain_provider = brain_cfg.get("provider", "claude")
+    if brain_provider == "openrouter":
+        brain_done = _has("OPENROUTER_API_KEY")
+        brain_help = "Enter OPENROUTER_API_KEY in .env or Settings."
+    elif brain_provider == "codex":
+        brain_done = True
+        brain_help = "Ensure OpenAI Codex CLI is logged in."
+    else:
+        brain_done = True
+        brain_help = "Ensure Claude Code CLI is logged in."
+
     checks.append({
-        "id": "config", "label": f"Harvey configured ({config_path.name})",
-        "done": config_valid,
+        "id": "brain_provider", "label": f"AI Engine configured ({brain_provider})",
+        "done": brain_done,
         "required": True,
-        "help": "Train Harvey on your product. Use the trainer or set up manually through Claude.",
+        "help": brain_help,
     })
 
     # 6. Product trained
@@ -622,6 +635,9 @@ def _quota_client_for(provider: str, model: str = ""):
         elif provider == "claude":
             from harvey.integrations.quota import QuotaClient
             _quota_clients[key] = QuotaClient()
+        elif provider == "openrouter":
+            from harvey.openrouter import OpenRouterClient, OpenRouterQuotaClient
+            _quota_clients[key] = OpenRouterQuotaClient(OpenRouterClient(model=model))
         else:
             return None
     return _quota_clients[key]

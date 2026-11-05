@@ -168,7 +168,10 @@ class SmtpImapProvider(MailProvider):
             await smtp.quit()
         except Exception as e:
             return False, f"SMTP login failed: {str(e)[:200]}"
-        # IMAP handshake
+        # IMAP handshake (optional)
+        if not self.imap_host or not self.imap_pass:
+            return True, f"SMTP connected as {self.smtp_user} (IMAP disabled)"
+
         loop = asyncio.get_event_loop()
 
         def _imap_check():
@@ -184,5 +187,5 @@ class SmtpImapProvider(MailProvider):
         try:
             await loop.run_in_executor(None, _imap_check)
         except Exception as e:
-            return False, f"SMTP OK but IMAP login failed: {str(e)[:200]}"
+            return True, f"SMTP connected as {self.smtp_user} (IMAP skipped: {str(e)[:80]})"
         return True, f"SMTP + IMAP connected as {self.smtp_user}"

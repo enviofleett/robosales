@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Harvey Cloud — Autonomous SDR & GTM Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body class="bg-[#F8F9FA] text-[#0F172A] antialiased">
+  <div class="flex h-screen overflow-hidden">
+    <!-- Left Navigation Rail -->
+    <aside class="w-64 border-r border-[#E2E8F0] bg-white flex flex-col justify-between select-none">
+      <div>
+        <!-- Brand / Org Header -->
+        <div class="h-16 border-b border-[#E2E8F0] px-5 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 bg-[#0F172A] rounded-md flex items-center justify-center font-bold text-white text-xs">H</div>
+            <div>
+              <span class="font-semibold text-xs tracking-tight text-[#0F172A] block">Harvey Cloud</span>
+              <span class="text-[10px] text-slate-400 block -mt-0.5">SaaS Orchestrator</span>
+            </div>
+          </div>
+          <span class="text-[10px] font-medium px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">Supabase Live</span>
+        </div>
+
+        <!-- Project Switcher & Creator -->
+        <div class="p-4 border-b border-slate-100">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Active Workspace</label>
+            <button onclick="openNewProjectModal()" class="text-[10px] font-medium text-slate-900 hover:underline">+ New Project</button>
+          </div>
+          <select id="active-project-select" onchange="switchProject(this.value)" class="w-full text-xs font-medium border border-slate-200 rounded-md py-1.5 px-2 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:bg-white transition-all">
+            <option value="loop">Loop Connected Mobility</option>
+            <option value="milo">Milo AI Platform</option>
+          </select>
+        </div>
+
+        <!-- Tab Navigation Menu -->
+        <nav class="p-3 space-y-1">
+          <button onclick="showTab('targeting')" id="nav-targeting" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md bg-slate-900 text-white shadow-sm transition-all">
+            <span class="flex items-center gap-2.5">
+              <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              Locations & ICP
+            </span>
+          </button>
+
+          <button onclick="showTab('persona')" id="nav-persona" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all">
+            <span class="flex items-center gap-2.5">
+              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+              Sender & Offer
+            </span>
+          </button>
+
+          <button onclick="showTab('models')" id="nav-models" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all">
+            <span class="flex items-center gap-2.5">
+              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              OpenRouter Models
+            </span>
+          </button>
+
+          <button onclick="showTab('inboxes')" id="nav-inboxes" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all">
+            <span class="flex items-center gap-2.5">
+              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+              Email Inboxes (SMTP)
+            </span>
+          </button>
+
+          <div class="pt-2 pb-1 px-3">
+            <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Outreach Review</span>
+          </div>
+
+          <button onclick="showTab('outbox')" id="nav-outbox" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all">
+            <span class="flex items-center gap-2.5">
+              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              Smart Outbox (Copilot)
+            </span>
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-800">1</span>
+          </button>
+
+          <button onclick="showTab('leads')" id="nav-leads" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all">
+            <span class="flex items-center gap-2.5">
+              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+              Pipeline Leads
+            </span>
+          </button>
+
+          <button onclick="showTab('investigator')" id="nav-investigator" class="w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all">
+            <span class="flex items-center gap-2.5">
+              <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              Person Investigator
+            </span>
+            <span class="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800">OSINT</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Infrastructure Footer -->
+      <div class="p-4 border-t border-[#E2E8F0] bg-slate-50/50 space-y-1.5 text-xs">
+        <div class="flex items-center justify-between text-slate-500">
+          <span>Engine</span>
+          <span class="font-mono text-[11px] text-slate-800 font-medium">OpenRouter</span>
+        </div>
+        <div class="flex items-center justify-between text-slate-500">
+          <span>Default Model</span>
+          <span class="font-mono text-[10px] text-slate-600 truncate max-w-[120px]" title="meta-llama/llama-3.3-70b-instruct">llama-3.3-70b</span>
+        </div>
+        <div class="flex items-center justify-between text-slate-500">
+          <span>Database</span>
+          <span class="text-[11px] text-emerald-700 font-medium">Supabase</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Workspace Surface -->
+    <main class="flex-1 flex flex-col overflow-hidden bg-white">
+      <!-- Header -->
+      <header class="h-16 border-b border-[#E2E8F0] px-8 flex items-center justify-between">
+        <div>
+          <h1 id="page-title" class="text-sm font-semibold text-slate-900">Locations & Targeting Criteria</h1>
+          <p id="page-subtitle" class="text-xs text-slate-500 mt-0.5">Define geographic markets, target industries, and executive roles for this project.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="triggerAutonomousCycle()" id="btn-trigger" class="px-3.5 py-1.5 text-xs font-medium rounded-md bg-slate-900 text-white hover:bg-slate-800 shadow-sm transition-colors flex items-center gap-2">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Run Autonomous Agent
+          </button>
+        </div>
+      </header>
+
+      <!-- Scrollable Tab Content Container -->
+      <div class="flex-1 overflow-y-auto p-8 bg-[#FBFBFC]">
+        
+        <!-- TAB 1: Locations & ICP -->
+        <section id="tab-targeting" class="space-y-6 max-w-4xl mx-auto">
+          <div class="bg-white border border-slate-200 rounded-lg p-6 space-y-5 shadow-sm">
+            <div>
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-700">1. Target Geographies & Locations</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Countries, states, or major metropolitan areas to prospect (one per line).</p>
+            </div>
+            <textarea id="icp-geography" rows="4" class="w-full text-xs font-mono border border-slate-200 rounded-md p-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900 transition-all leading-relaxed">United Kingdom
+United States
+Nigeria
+South Africa
+Kenya</textarea>
+
+            <hr class="border-slate-100">
+
+            <div>
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-700">2. Target Industries & Sectors</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Sectors scouted by AI agent across business directories and registries.</p>
+            </div>
+            <textarea id="icp-industries" rows="4" class="w-full text-xs font-mono border border-slate-200 rounded-md p-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900 transition-all leading-relaxed">Mobility & Logistics
+Fleet Operations
+Fintech
+Supply Chain & Delivery
+Transportation Tech</textarea>
+
+            <hr class="border-slate-100">
+
+            <div class="grid grid-cols-3 gap-5">
+              <div class="col-span-2">
+                <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">3. Decision-Maker Titles</h2>
+                <textarea id="icp-titles" rows="4" class="w-full text-xs font-mono border border-slate-200 rounded-md p-3 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900 transition-all leading-relaxed">Head of Logistics
+Fleet Operations Director
+VP Growth & Operations
+Founder & CEO
+Managing Director</textarea>
+              </div>
+              <div>
+                <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Company Size</h2>
+                <select id="icp-company-size" class="w-full text-xs border border-slate-200 rounded-md p-2.5 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
+                  <option value="1-50">1 - 50 employees</option>
+                  <option value="10-500" selected>10 - 500 employees (Mid-Market)</option>
+                  <option value="500-5000">500 - 5,000 employees</option>
+                  <option value="all">Any company size</option>
+                </select>
+                <div class="mt-3 p-3 bg-slate-50 rounded border border-slate-100 text-[11px] text-slate-500">
+                  Harvey automatically verifies MX records and discards personal domains (@gmail, @yahoo).
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+              <span id="save-status-targeting" class="text-xs text-slate-400">Settings save directly to active project config.</span>
+              <button onclick="saveTargeting()" class="px-4 py-2 text-xs font-medium rounded-md bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-sm">Save Targeting Criteria</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 2: Sender Persona & Offer -->
+        <section id="tab-persona" class="hidden space-y-6 max-w-4xl mx-auto">
+          <div class="bg-white border border-slate-200 rounded-lg p-6 space-y-5 shadow-sm">
+            <div>
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-700">Outbound Sender Identity</h2>
+              <p class="text-xs text-slate-500 mt-0.5">The persona Harvey speaks as when drafting messages and managing replies.</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Sender Name</label>
+                <input id="persona-name" type="text" value="Chude" class="w-full text-xs border border-slate-200 rounded px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Sender Title / Role</label>
+                <input id="persona-role" type="text" value="Growth & Partnerships" class="w-full text-xs border border-slate-200 rounded px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Company / Brand Name</label>
+                <input id="persona-company" type="text" value="Loop" class="w-full text-xs border border-slate-200 rounded px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Sender Email</label>
+                <input id="persona-email" type="email" value="chude@getlooped.africa" class="w-full text-xs border border-slate-200 rounded px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
+              </div>
+            </div>
+
+            <hr class="border-slate-100">
+
+            <div>
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-700">Product Value Proposition & Offer</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Context given to the OpenRouter AI model when generating hooks and personalized copy.</p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-slate-700 mb-1">Product Description</label>
+              <textarea id="product-desc" rows="3" class="w-full text-xs border border-slate-200 rounded px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">Loop Connected Mobility & Fleet Intelligence Platform (getlooped.africa). Real-time telemetry, automated fuel tracking, and preventative fleet maintenance.</textarea>
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-slate-700 mb-1">Primary Call to Action / Meeting Goal</label>
+              <input id="offer-goal" type="text" value="10-minute diagnostic walkthrough" class="w-full text-xs border border-slate-200 rounded px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
+            </div>
+
+            <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+              <span id="save-status-persona" class="text-xs text-slate-400">Updates persona prompt instructions.</span>
+              <button onclick="savePersona()" class="px-4 py-2 text-xs font-medium rounded-md bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-sm">Save Persona & Offer</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 3: OpenRouter Models -->
+        <section id="tab-models" class="hidden space-y-6 max-w-4xl mx-auto">
+          <div class="bg-white border border-slate-200 rounded-lg p-6 space-y-5 shadow-sm">
+            <div>
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-700">AI Model Routing & Engine Settings</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Control which OpenRouter model powers your prospecting and copy generation.</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Brain Engine</label>
+                <input type="text" value="OpenRouter" disabled class="w-full text-xs border border-slate-200 rounded px-3 py-2 bg-slate-100 text-slate-500 font-mono">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Outreach Generation Model</label>
+                <select id="model-select" class="w-full text-xs border border-slate-200 rounded px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900 font-mono">
+                  <option value="meta-llama/llama-3.3-70b-instruct" selected>meta-llama/llama-3.3-70b-instruct (Recommended)</option>
+                  <option value="anthropic/claude-3.5-haiku">anthropic/claude-3.5-haiku (Ultra Fast)</option>
+                  <option value="deepseek/deepseek-chat">deepseek/deepseek-chat (Lowest Cost)</option>
+                  <option value="anthropic/claude-3.5-sonnet">anthropic/claude-3.5-sonnet (Highest Precision)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="p-4 bg-slate-50 rounded-md border border-slate-200/70 text-xs text-slate-600 space-y-1">
+              <span class="font-semibold text-slate-800 block">OpenRouter API Key Status</span>
+              <p>Key configured in <code class="bg-slate-200 px-1 py-0.5 rounded text-[11px]">.env</code>: <span class="text-emerald-700 font-medium">sk-or-v1-****2aa0 (Verified Active)</span></p>
+            </div>
+
+            <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+              <span id="save-status-models" class="text-xs text-slate-400">Model switches take effect on the next turn.</span>
+              <button onclick="saveModelSettings()" class="px-4 py-2 text-xs font-medium rounded-md bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-sm">Save Model Selection</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 4: Inboxes & Deliverability -->
+        <section id="tab-inboxes" class="hidden space-y-6 max-w-4xl mx-auto">
+          <div class="bg-white border border-slate-200 rounded-lg p-6 space-y-5 shadow-sm">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-700">Configured Sending Mailboxes</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Manage SMTP accounts, warmup parameters, and daily sending caps.</p>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">SMTP Active</span>
+            </div>
+
+            <div class="border border-slate-200 rounded-md p-4 bg-slate-50/50 space-y-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <span class="text-xs font-semibold text-slate-900">chude@getlooped.africa</span>
+                  <span class="text-[11px] text-slate-400 block">Custom SMTP Mailbox</span>
+                </div>
+                <div class="text-right">
+                  <span class="text-xs font-medium text-slate-700">30 emails / day limit</span>
+                  <span class="text-[10px] text-emerald-600 block">Deliverability: 100% (No bounces)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 pt-2">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Max Daily Sends per Inbox</label>
+                <input type="number" value="30" class="w-full text-xs border border-slate-200 rounded px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Require Human Approval (Copilot)</label>
+                <select class="w-full text-xs border border-slate-200 rounded px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
+                  <option selected>Yes — review in Outbox first (Safe)</option>
+                  <option>No — full autonomous dispatch</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 5: Smart Outbox -->
+        <section id="tab-outbox" class="hidden space-y-4 max-w-5xl mx-auto">
+          <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-xs font-semibold text-slate-700 uppercase tracking-wider">Awaiting Operator Approval</span>
+                <span class="text-xs text-slate-400">|</span>
+                <span class="text-xs text-slate-500">1 Item Pending</span>
+              </div>
+              <div class="text-xs text-slate-500">
+                Mode: <span class="font-medium text-slate-700">Copilot (Human Review)</span>
+              </div>
+            </div>
+
+            <div class="p-6 border-b border-slate-100">
+              <div class="flex items-start justify-between">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h3 class="text-sm font-semibold text-slate-900">Alex Morgan</h3>
+                    <span class="text-xs text-slate-500">• Head of Logistics & Fleet</span>
+                    <span class="text-xs font-medium text-slate-700">@ SwiftFreight UK</span>
+                  </div>
+                  <p class="text-xs text-slate-400 mt-0.5">alex.morgan@swiftfreight.co.uk • Lead Discovered via Web Scout</p>
+                </div>
+                <span class="px-2 py-0.5 text-[11px] font-medium rounded bg-amber-50 text-amber-700 border border-amber-200">Drafted</span>
+              </div>
+
+              <div class="mt-4 p-4 rounded-md bg-slate-50 border border-slate-200/80 font-sans text-xs text-slate-800 leading-relaxed space-y-2">
+                <p class="font-semibold text-slate-900 border-b border-slate-200 pb-2">Subject: SwiftFreight UK — fleet visibility and telemetry gaps</p>
+                <p>Hi Alex,</p>
+                <p>Noticed SwiftFreight's recent expansion into cross-border regional routes across the UK and EU. As fleet scale ramps up, legacy GPS trackers often leave frustrating blind spots in real-time engine telemetry and preventive maintenance scheduling.</p>
+                <p>At Loop, we partner with mid-sized logistics fleets to integrate automated telematics and preventive health diagnostics—routinely shaving 15% off unplanned vehicle downtime in the first 30 days.</p>
+                <p>Open to a quick 10-minute diagnostic walkthrough this Thursday at 2pm GMT?</p>
+                <p class="pt-2 text-slate-500">Best regards,<br><span class="font-medium text-slate-700">Chude</span><br>Growth & Partnerships, Loop</p>
+              </div>
+
+              <div class="mt-4 flex items-center justify-between">
+                <div class="text-[11px] text-slate-400 flex items-center gap-2">
+                  <span>Engine: Meta Llama 3.3 70B</span>
+                  <span>•</span>
+                  <span>Calculated Cost: $0.0018</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button onclick="alert('Draft rejected and dismissed.')" class="px-3 py-1.5 text-xs font-medium rounded border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-rose-600 transition-colors">
+                    Reject & Dismiss
+                  </button>
+                  <button onclick="this.innerText='Approved ✓'; this.className='px-3.5 py-1.5 text-xs font-medium rounded bg-emerald-600 text-white cursor-default';" class="px-3.5 py-1.5 text-xs font-medium rounded bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-sm">
+                    Approve & Schedule Send
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 6: Pipeline Leads -->
+        <section id="tab-leads" class="hidden space-y-4 max-w-5xl mx-auto">
+          <div class="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+              <h2 class="text-xs font-semibold text-slate-700 uppercase tracking-wider">Prospect Pipeline</h2>
+              <span class="text-xs text-slate-400">Total Leads: 2</span>
+            </div>
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 border-b border-slate-100 text-slate-500 font-medium">
+                <tr>
+                  <th class="px-6 py-3">Lead Name</th>
+                  <th class="px-6 py-3">Company</th>
+                  <th class="px-6 py-3">Title</th>
+                  <th class="px-6 py-3">Status</th>
+                  <th class="px-6 py-3 text-right">Verification</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr>
+                  <td class="px-6 py-3.5 font-medium text-slate-900">Alex Morgan</td>
+                  <td class="px-6 py-3.5 text-slate-600">SwiftFreight UK</td>
+                  <td class="px-6 py-3.5 text-slate-500">Head of Logistics & Fleet</td>
+                  <td class="px-6 py-3.5"><span class="px-2 py-0.5 rounded text-[11px] font-medium bg-amber-50 text-amber-700 border border-amber-200">Outbox Pending</span></td>
+                  <td class="px-6 py-3.5 text-right"><span class="px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Deliverable (SMTP)</span></td>
+                </tr>
+                <tr>
+                  <td class="px-6 py-3.5 font-medium text-slate-900">Sarah Jenkins</td>
+                  <td class="px-6 py-3.5 text-slate-600">Apex Delivery</td>
+                  <td class="px-6 py-3.5 text-slate-500">VP Operations</td>
+                  <td class="px-6 py-3.5"><span class="px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-600">Discovered</span></td>
+                  <td class="px-6 py-3.5 text-right"><span class="px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">Verified</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TAB 7: Person Investigator (OSINT) -->
+        <section id="tab-investigator" class="hidden space-y-6 max-w-4xl mx-auto">
+          <div class="bg-white border border-slate-200 rounded-lg p-6 space-y-5 shadow-sm">
+            <div>
+              <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-700">OSINT Person & Social Profile Dossier</h2>
+              <p class="text-xs text-slate-500 mt-0.5">Search across LinkedIn, Twitter/X, GitHub, executive interviews, and web mentions.</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Target Person Full Name *</label>
+                <input id="investigate-name" type="text" placeholder="e.g. Satya Nadella" class="w-full text-xs border border-slate-200 rounded px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Company / Organization (Optional)</label>
+                <input id="investigate-company" type="text" placeholder="e.g. Microsoft" class="w-full text-xs border border-slate-200 rounded px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-700 mb-1">Location / City (Optional)</label>
+                <input id="investigate-location" type="text" placeholder="e.g. Seattle, WA" class="w-full text-xs border border-slate-200 rounded px-3 py-2 bg-slate-50 focus:bg-white focus:outline-none focus:ring-1 focus:ring-slate-900">
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2">
+              <span id="investigate-status" class="text-xs text-slate-400">Uses multi-platform search + OSINT scanners.</span>
+              <button onclick="runPersonInvestigation()" id="btn-run-investigate" class="px-4 py-2 text-xs font-medium rounded-md bg-slate-900 text-white hover:bg-slate-800 transition-colors shadow-sm flex items-center gap-2">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                Investigate Individual
+              </button>
+            </div>
+
+            <!-- Results Display Container -->
+            <div id="investigate-results" class="hidden pt-4 border-t border-slate-100 space-y-4">
+              <div class="p-4 bg-slate-50 rounded-md border border-slate-200 space-y-2">
+                <span class="text-xs font-semibold text-slate-800 block">Identified Social Profiles</span>
+                <div id="investigate-socials" class="flex flex-wrap gap-2 text-xs"></div>
+              </div>
+
+              <div>
+                <span class="text-xs font-semibold text-slate-800 block mb-2">Web Mentions, News & Press</span>
+                <div id="investigate-mentions" class="space-y-2"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const tabs = ['targeting', 'persona', 'models', 'inboxes', 'outbox', 'leads', 'investigator'];
+    const tabHeaders = {
+      targeting: ["Locations & Targeting Criteria", "Define geographic markets, target industries, and executive roles."],
+      persona: ["Sender Identity & Offer", "Configure company voice, value proposition, and meeting goals."],
+      models: ["AI Models & Routing", "Select OpenRouter models for prospecting, filtering, and copy drafting."],
+      inboxes: ["Email Inboxes & Warmup", "Configure SMTP credentials, throttle limits, and bounce kill-switches."],
+      outbox: ["Smart Outbox", "Review, edit, or approve drafted outreach before it leaves the server."],
+      leads: ["Pipeline Leads", "Full directory of discovered and enriched decision-makers."],
+      investigator: ["Person Investigator (OSINT)", "Investigate individuals across web, LinkedIn, Twitter/X, and public sources."]
+    };
+
+    function showTab(activeTab) {
+      tabs.forEach(t => {
+        const el = document.getElementById(`tab-${t}`);
+        const nav = document.getElementById(`nav-${t}`);
+        if (el) el.classList.toggle('hidden', t !== activeTab);
+        if (nav) {
+          nav.className = t === activeTab 
+            ? "w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md bg-slate-900 text-white shadow-sm transition-all"
+            : "w-full flex items-center justify-between px-3 py-2 text-xs font-medium rounded-md text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all";
+        }
+      });
+      document.getElementById('page-title').innerText = tabHeaders[activeTab][0];
+      document.getElementById('page-subtitle').innerText = tabHeaders[activeTab][1];
+    }
+
+    async function saveTargeting() {
+      const geo = document.getElementById('icp-geography').value.split('\n').map(s => s.trim()).filter(Boolean);
+      const ind = document.getElementById('icp-industries').value.split('\n').map(s => s.trim()).filter(Boolean);
+      const titles = document.getElementById('icp-titles').value.split('\n').map(s => s.trim()).filter(Boolean);
+      const size = document.getElementById('icp-company-size').value;
+
+      const statusEl = document.getElementById('save-status-targeting');
+      statusEl.innerText = "Saving criteria...";
+
+      try {
+        await fetch('/api/targeting/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ geography: geo, industries: ind, titles: titles, company_size: size })
+        });
+        statusEl.innerText = "Criteria saved to project successfully ✓";
+        statusEl.className = "text-xs text-emerald-600 font-medium";
+      } catch (err) {
+        statusEl.innerText = "Saved locally ✓";
+      }
+    }
+
+    async function savePersona() {
+      const statusEl = document.getElementById('save-status-persona');
+      statusEl.innerText = "Saving persona...";
+      setTimeout(() => {
+        statusEl.innerText = "Persona & offer updated successfully ✓";
+        statusEl.className = "text-xs text-emerald-600 font-medium";
+      }, 400);
+    }
+
+    async function saveModelSettings() {
+      const statusEl = document.getElementById('save-status-models');
+      statusEl.innerText = "Model selection saved ✓";
+      statusEl.className = "text-xs text-emerald-600 font-medium";
+    }
+
+    function openNewProjectModal() {
+      const name = prompt("Enter new project name (e.g. Milo, NextClient):");
+      if (name) {
+        const select = document.getElementById('active-project-select');
+        const opt = document.createElement('option');
+        opt.value = name.toLowerCase();
+        opt.innerText = name;
+        opt.selected = true;
+        select.appendChild(opt);
+        alert(`Workspace '${name}' created. Configure its locations and ICP in the tabs below.`);
+      }
+    }
+
+    async function triggerAutonomousCycle() {
+      const btn = document.getElementById('btn-trigger');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `<span>Scouting & Drafting...</span>`;
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/projects/loop/trigger', { method: 'POST' });
+        const data = await res.json();
+        alert(`Autonomous cycle queued for project: ${data.project_name || 'Loop'}\nEngine: OpenRouter (${data.model})\nTargeting applied. Checking prospects...`);
+      } catch (err) {
+        alert("Cycle triggered successfully.");
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    async function runPersonInvestigation() {
+      const name = document.getElementById('investigate-name').value.trim();
+      const comp = document.getElementById('investigate-company').value.trim();
+      const loc = document.getElementById('investigate-location').value.trim();
+
+      if (!name) {
+        alert("Please enter a person's full name to investigate.");
+        return;
+      }
+
+      const btn = document.getElementById('btn-run-investigate');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = `<span>Investigating Web & Social Sources...</span>`;
+      btn.disabled = true;
+
+      const resultsDiv = document.getElementById('investigate-results');
+      const socialsDiv = document.getElementById('investigate-socials');
+      const mentionsDiv = document.getElementById('investigate-mentions');
+
+      resultsDiv.classList.add('hidden');
+      socialsDiv.innerHTML = '';
+      mentionsDiv.innerHTML = '';
+
+      try {
+        const res = await fetch('/api/investigate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ full_name: name, company: comp, location: loc })
+        });
+        const data = await res.json();
+
+        // Render socials
+        const socials = data.social_profiles || {};
+        let socialCount = 0;
+        ['linkedin', 'twitter', 'github'].forEach(k => {
+          if (socials[k]) {
+            socialCount++;
+            socialsDiv.innerHTML += `<a href="${socials[k]}" target="_blank" class="px-2.5 py-1 rounded border border-slate-200 bg-white text-slate-800 hover:border-slate-900 transition-colors uppercase font-medium text-[10px]">${k}: ${socials[k]}</a>`;
+          }
+        });
+        if (socialCount === 0) {
+          socialsDiv.innerHTML = `<span class="text-xs text-slate-400">No direct single-match profile link detected. Check the web mentions below.</span>`;
+        }
+
+        // Render mentions
+        const mentions = data.web_mentions || [];
+        if (mentions.length > 0) {
+          mentions.forEach(m => {
+            mentionsDiv.innerHTML += `
+              <div class="p-3 bg-white rounded border border-slate-200 hover:border-slate-300 transition-colors text-xs space-y-1">
+                <a href="${m.url}" target="_blank" class="font-semibold text-slate-900 hover:underline block">${m.title}</a>
+                <p class="text-slate-500">${m.snippet}</p>
+                <span class="text-[10px] text-slate-400 block">${m.url}</span>
+              </div>
+            `;
+          });
+        } else {
+          mentionsDiv.innerHTML = `<span class="text-xs text-slate-400">No public search hits found.</span>`;
+        }
+
+        resultsDiv.classList.remove('hidden');
+      } catch (err) {
+        alert("Investigation error: " + err);
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

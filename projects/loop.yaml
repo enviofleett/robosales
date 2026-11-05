@@ -1,0 +1,77 @@
+persona:
+  name: Chude
+  company: Loop
+  role: Growth & Partnerships
+  email: chude@getlooped.africa
+  linkedin: ''
+  tone: sharp, conversational, consultative, confident, value-first
+product:
+  name: Loop
+  description: Loop Connected Mobility & Growth Platform (getlooped.africa)
+  pricing: Flexible plans tailored to fleet & business scale
+  key_benefits:
+  - Smart vehicle tracking, automated telemetry, and real-time fleet health
+  - Digital maintenance workflows, fuel analytics, and driver engagement
+  - Seamless monetization and modern connected mobility solutions
+  objection_responses:
+    too expensive: Completely understand. We usually structure our rollouts so that
+      the operational savings and reduced downtime offset the platform cost within
+      the first 30 days.
+    already have a solution: "Makes sense! Many of our partners previously had legacy\
+      \ GPS or basic trackers \u2014 curious, what is the biggest visibility gap or\
+      \ headache your current system still leaves unsolved?"
+    not interested: Understood, no worries at all! If your fleet management or mobility
+      priorities evolve down the line, feel free to reach back out.
+  offer:
+    primary: Loop Mobility Platform & Fleet Intelligence
+    entry: 10-minute fleet diagnostic & walkthrough
+    goal: book_call
+    booking_method: calendar_link
+    booking_url: ''
+    meeting_duration: 15 minutes
+    meeting_owner: Chude
+icp:
+  industries:
+  - Mobility & Logistics
+  - Fleet Operations
+  - Government parastals and agency
+  - Supply Chain & Delivery
+  - Transportation Tech
+  company_size: 10-500 employees
+  titles:
+  - Head of Logistics
+  - Fleet Operations Director
+  - VP Growth & Operations
+  - Founder & CEO
+  - Managing Director
+  geography:
+  - Nigeria
+  - Abuja
+  hiring_signals: []
+brain:
+  provider: openrouter
+  model: meta-llama/llama-3.3-70b-instruct
+channels:
+  email:
+    enabled: true
+    provider: smtp
+    max_daily_sends: 30
+    require_approval: true
+    send_to_risky: false
+    max_bounce_rate: 0.05
+  linkedin:
+    enabled: false
+    max_daily_connections: 20
+    max_daily_messages: 10
+usage:
+  max_daily_claude_percent: 80
+  heartbeat_interval_minutes: 15
+  quiet_hours:
+    start: '22:00'
+    end: 07:00
+    timezone: America/New_York
+compliance:
+  precleared:
+    enabled: false
+    sender_country: ''
+    address_source: unknown
